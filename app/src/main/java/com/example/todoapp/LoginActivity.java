@@ -3,6 +3,7 @@ package com.example.todoapp;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -39,6 +40,8 @@ public class LoginActivity extends AppCompatActivity {
     private EditText email_ET,password_ET;
     ProgressBar progressBar;
     private String email,password;
+
+    SharedPreferenceClass sharedPreferenceClass;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +56,8 @@ public class LoginActivity extends AppCompatActivity {
 
 
         progressBar=findViewById(R.id.progress_bar);
+
+        sharedPreferenceClass=new SharedPreferenceClass(this);
 
         registerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,6 +97,8 @@ public class LoginActivity extends AppCompatActivity {
                 try {
                     if(response.getBoolean("success")){
                         String token=response.getString("token");
+                        //Store the token in Shared Preference
+                        sharedPreferenceClass.setValue_string("token",token);
                         Toast.makeText(LoginActivity.this,token,Toast.LENGTH_LONG).show();
 
                          startActivity(new Intent(LoginActivity.this,MainActivity.class));
@@ -154,6 +161,18 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(this,"Plz Enter the valid Password",Toast.LENGTH_LONG).show();
         }
         return isValid;
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        SharedPreferences todo_pref=getSharedPreferences("user_todo",MODE_PRIVATE);
+        if(todo_pref.contains("token")){
+            startActivity(new Intent(LoginActivity.this,MainActivity.class));
+            finish();
+        }
 
     }
 }

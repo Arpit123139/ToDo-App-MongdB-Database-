@@ -3,6 +3,7 @@ package com.example.todoapp;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -39,6 +40,8 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText name_ET,email_ET,password_ET;
     ProgressBar progressBar;
 
+    SharedPreferenceClass sharedPreferenceClass;
+
     private String name,email,password;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +56,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         registerBtn=findViewById(R.id.registerBtn);
         progressBar=findViewById(R.id.progress_bar);
+        sharedPreferenceClass=new SharedPreferenceClass(this);
 
         loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,6 +105,10 @@ public class RegisterActivity extends AppCompatActivity {
                 try {
                     if(response.getBoolean("success")){
                         String token=response.getString("token");
+
+                        // Storing the token int the Shared Preference ..........................
+                        sharedPreferenceClass.setValue_string("token",token);
+
                         Toast.makeText(RegisterActivity.this,token,Toast.LENGTH_LONG).show();
 
                         startActivity(new Intent(RegisterActivity.this,MainActivity.class));
@@ -168,6 +176,16 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(this,"Plz Enter the valid Password",Toast.LENGTH_LONG).show();
         }
         return isValid;
+
+    }
+    protected void onStart() {
+        super.onStart();
+
+        SharedPreferences todo_pref=getSharedPreferences("user_todo",MODE_PRIVATE);
+        if(todo_pref.contains("token")){
+            startActivity(new Intent(RegisterActivity.this,MainActivity.class));
+            finish();
+        }
 
     }
 }
