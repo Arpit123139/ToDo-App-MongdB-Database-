@@ -5,6 +5,7 @@
       <map>
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.1765" />
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/drawable/btn_bg.xml" value="0.1765" />
+        <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/drawable/ic_arrow.xml" value="0.137" />
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/drawable/img_shadow.xml" value="0.1765" />
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/drawable/input_field.xml" value="0.1765" />
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/drawable/refresh.xml" value="0.1765" />
@@ -17,6 +18,7 @@
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/layout/fragment_home.xml" value="0.264" />
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/layout/nav_header.xml" value="0.27447916666666666" />
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/layout/navigation_header.xml" value="0.27447916666666666" />
+        <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/layout/todo_list_item.xml" value="0.1265625" />
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/menu/main_menu.xml" value="0.27447916666666666" />
         <entry key="..\:/Users/Arpit/AndroidStudioProjects/ToDoApp/app/src/main/res/menu/menu.xml" value="0.27447916666666666" />
       </map>
