@@ -55,11 +55,6 @@ public class HomeFragment extends Fragment implements RecyclerViewClickListener 
     TextView empty_tv;
     ArrayList<TodoModel> arr;
     TodoListAdapter todoListAdapter;
-
-
-    public HomeFragment() {
-        // Required empty public constructor
-    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -137,17 +132,25 @@ public class HomeFragment extends Fragment implements RecyclerViewClickListener 
             public void onErrorResponse(VolleyError error) {
 
                 NetworkResponse response = error.networkResponse;
-                if(error instanceof ServerError && response != null) {
-                    try {
-                        //Converting the jsonResponse
-                        String res = new String(response.data, HttpHeaderParser.parseCharset(response.headers,  "utf-8"));
-                        JSONObject obj = new JSONObject(res);
-                        Toast.makeText(getActivity(), obj.getString("msg"), Toast.LENGTH_SHORT).show();
-                        progressBar.setVisibility(View.GONE);
-                    } catch (JSONException | UnsupportedEncodingException je) {
-                        je.printStackTrace();
-                        progressBar.setVisibility(View.GONE);
+                if(error==null || error.networkResponse==null){
+                    return;
+                }
+                String body;
+                final String statusCode=String.valueOf(error.networkResponse.statusCode);
+                try {
+                    body=new String(error.networkResponse.data,"UTF-8");
+                    JSONObject errorObject=new JSONObject(body);
+                    /************************************************HANDLIND IF THE TOKEN EXPIRES**********************/
+                    if(errorObject.getString("msg").equals("Token Not Valid")) {
+                        sharedPreferenceClass.clear();
+                        startActivity(new Intent(getActivity(), LoginActivity.class));        // It should redirect to login page
+                        Toast.makeText(getActivity(), "Session expired", Toast.LENGTH_SHORT).show();
                     }
+
+                    Toast.makeText(getActivity(), errorObject.getString("msg") , Toast.LENGTH_SHORT).show();
+
+                } catch (UnsupportedEncodingException | JSONException e) {
+                    e.printStackTrace();
                 }
             }
         }) {
@@ -262,6 +265,55 @@ public class HomeFragment extends Fragment implements RecyclerViewClickListener 
         dialog.show();
     }
 
+    private void showDeleteDialog(String id, int position) {
+        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
+                .setTitle("Are you want to delete the task ?")
+                .setPositiveButton("Yes", null)
+                .setNegativeButton("No",null)
+                .create();
+
+        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                Button button = ((AlertDialog)alertDialog).getButton(AlertDialog.BUTTON_POSITIVE);
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        deleteTodo(id, position);
+                        alertDialog.dismiss();
+                    }
+                });
+            }
+        });
+
+        alertDialog.show();
+    }
+
+    private void showFinishDialog(String id, int position) {
+        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
+                .setTitle("Are you want to finish task ?")
+                .setPositiveButton("Yes", null)
+                .setNegativeButton("No",null)
+                .create();
+
+        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                Button button = ((AlertDialog)alertDialog).getButton(AlertDialog.BUTTON_POSITIVE);
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        updateToFinishTodo(id, position);
+                        alertDialog.dismiss();
+                    }
+                });
+            }
+        });
+
+        alertDialog.show();
+    }
+
+
     /*****************************************Adding the NEW Task To the Server Same as Login***********************/
     private void addTask(String title, String description) {
 
@@ -374,7 +426,76 @@ public class HomeFragment extends Fragment implements RecyclerViewClickListener 
 
         Toast.makeText(getActivity(),"Update Clickesd",Toast.LENGTH_LONG).show();
     }
+/*************************************************DELETING THE TASK*************************************************/
+    private void deleteTodo(String id, int position) {
 
+        String url="  https://todoapparpit.herokuapp.com/api/todo/"+id;
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.DELETE, url, null
+                , new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    if(response.getBoolean("success")) {
+                        Toast.makeText(getActivity(), response.getString("msg"), Toast.LENGTH_SHORT).show();
+                        arr.remove(position);
+                        todoListAdapter.notifyItemRemoved(position);         //or call getTask() again
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getActivity(), error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(10000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        RequestQueue requestQueue = Volley.newRequestQueue(getContext());
+        requestQueue.add(jsonObjectRequest);
+    }
+    /*********************************************Marking The Task As DONE******************************************/
+    private void updateToFinishTodo(String id,final int position) {
+        String url = " https://todoapparpit.herokuapp.com/api/todo/" + id;
+        HashMap<String, String> body = new HashMap<>();
+        body.put("finished", "true");
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.PUT, url, new JSONObject(body),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            if (response.getBoolean("success")) {
+                                arr.remove(position);              // Deleting from the ArrayList but it remains in the Database
+                                //getTasks();
+                                todoListAdapter.notifyItemRemoved(position);
+                                Toast.makeText(getActivity(), response.getString("msg"), Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getActivity(), error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("Content-Type", "application/json");
+                return params;
+            }
+        };
+
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(10000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        RequestQueue requestQueue = Volley.newRequestQueue(getContext());
+        requestQueue.add(jsonObjectRequest);
+    }
 
     @Override
     public void onItemClick(int position) {
@@ -383,6 +504,7 @@ public class HomeFragment extends Fragment implements RecyclerViewClickListener 
 
     @Override
     public void onLongItemClick(int position) {
+        showUpdateDialog(arr.get(position).getId(),arr.get(position).getTitle(),arr.get(position).getDescription());
 
     }
 
@@ -395,11 +517,14 @@ public class HomeFragment extends Fragment implements RecyclerViewClickListener 
 
     @Override
     public void onDeleteButtonClick(int position) {
-
+        showDeleteDialog(arr.get(position).getId(),position);
     }
+
+
 
     @Override
     public void onDoneButtonClick(int position) {
+       showFinishDialog(arr.get(position).getId(),position);
 
     }
 }
